@@ -2,23 +2,110 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Nhúng Apps Script Web App</title>
+  <title>Kết nối GitHub Pages ↔ Apps Script</title>
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
     }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+    h1 { color: #2563eb; }
+    button {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+      margin: 6px 0;
     }
+    button:hover { background: #1e40af; }
+    pre {
+      background: #f3f4f6;
+      padding: 12px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    label { display:block; margin:8px 0 4px; }
+    input { padding: 8px; border-radius: 6px; border:1px solid #ccc; width: 100%; }
   </style>
 </head>
 <body>
-  <!-- Gán link Web App của Apps Script vào đây -->
-  <iframe src="https://script.google.com/macros/s/AKfycbzpUJj5sv9ODsbOkFWzlr7UtRqZs9eZESl1DMh02JgNCWzMpb5uyhUx7S5DbLiUcAyg/exec"></iframe>
+  <h1>GitHub Pages gọi Apps Script API</h1>
+
+  <section>
+    <h2>1. Kiểm tra trạng thái (GET)</h2>
+    <button id="btnPing">Ping API</button>
+    <pre id="pingResult">Chưa gọi...</pre>
+  </section>
+
+  <section>
+    <h2>2. Lấy danh sách (GET action=list)</h2>
+    <button id="btnList">Lấy danh sách</button>
+    <pre id="listResult">Chưa gọi...</pre>
+  </section>
+
+  <section>
+    <h2>3. Gửi dữ liệu (POST)</h2>
+    <form id="postForm">
+      <label>Họ tên</label>
+      <input id="name" placeholder="Nguyễn Văn A" required>
+      <label>Số tiền</label>
+      <input id="amount" type="number" placeholder="100000" required>
+      <button type="submit">Gửi</button>
+    </form>
+    <pre id="postResult">Chưa gửi...</pre>
+  </section>
+
+  <script>
+    // 👉 Thay link này bằng URL Web App của bạn (dạng .../exec)
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzpUJj5sv9ODsbOkFWzlr7UtRqZs9eZESl1DMh02JgNCWzMpb5uyhUx7S5DbLiUcAyg/exec";
+
+    const qs = (id) => document.querySelector(id);
+
+    // 1) Ping API
+    qs("#btnPing").addEventListener("click", async () => {
+      try {
+        const res = await fetch(GAS_URL + "?action=ping");
+        const data = await res.json();
+        qs("#pingResult").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        qs("#pingResult").textContent = "❌ Lỗi: " + err;
+      }
+    });
+
+    // 2) Lấy list
+    qs("#btnList").addEventListener("click", async () => {
+      try {
+        const res = await fetch(GAS_URL + "?action=list");
+        const data = await res.json();
+        qs("#listResult").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        qs("#listResult").textContent = "❌ Lỗi: " + err;
+      }
+    });
+
+    // 3) Gửi POST JSON
+    qs("#postForm").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const payload = {
+        name: qs("#name").value.trim(),
+        amount: Number(qs("#amount").value || 0),
+      };
+      try {
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        qs("#postResult").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        qs("#postResult").textContent = "❌ Lỗi: " + err;
+      }
+    });
+  </script>
 </body>
 </html>
